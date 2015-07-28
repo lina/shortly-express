@@ -71,11 +71,11 @@ app.post('/login', function (req, res) {
   visitor.login(password, function(loggedIn) {
     console.log("first trigger");
     if(loggedIn) {
-      coinsole.log("------------->redirecting to index");
+      console.log("------------->redirecting to index");
 
       res.redirect('/');
     } else {
-      coinsole.log("------------->redirecting to login");
+      console.log("------------->redirecting to login");
       // req.session.error = 'Access denied!';
       res.redirect('/login');
     }
