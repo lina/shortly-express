@@ -1,58 +1,51 @@
 var db = require('../config');
 var bcrypt = require('bcrypt-nodejs');
 var Promise = require('bluebird');
-console.log("IS THIS BEING RUN??????????@@@@@@@@@@@@");
+
 var User = db.Model.extend({
   tableName: 'users',
   hasTimestamps: true,
+
   links: function() {
     return this.hasMany(Link);
   },
 
-
   initialize: function() {
-    this.on('creating', function(model, attrs, options) {
-      console.log("------->attrs", model);
+    this.on('creating', function (model, attrs, options) {
+      // console.log("INITIALIZE RUNS");
+      // console.log("model----->", model);
+      // console.log("attrs----->", attrs);
+      var password = model.get('password');
+      var hash = bcrypt.hashSync(password);
+      model.set('hash', hash);
+      model.unset('password');
+    });
+  }
 
-      var hash = hashPassword()
-    })
-    this.on('saving', this.generateHash);
-  },
 
-  generateHash: function() {
-    return;
-  },
-
-
-}, {
-
-  // login: Promise.method(function(email, password) {
-  //   if (!email || !password) throw new Error('Email and password are both required');
-  //   return new this({email: email.toLowerCase().trim()}).fetch({require: true}).tap(function(user) {
-  //     return bcrypt.compareAsync(user.get('password'), password);
-  //   });
-  // })
 });
 
-// User.login(email, password)
-//   .then(function(user) {
-//     res.json(user.omit('password'));
-//   }).catch(User.NotFoundError, function() {
-//     res.json(400, {error: email + ' not found'});
-//   }).catch(function(err) {
-//     console.error(err);
-//   });
-// module.exports = User;
 
 
 
-exports.hashPassword = function (input) {
-  var hash = bcrypt.hashSync(input);
-  return { 
-    hash: hash
-  };
+User.userMethod = {
+  login: function (username, password) {
+    console.log("FIRST LEVEL ");
+    // if (!username || !password) throw new Error('Username and password are both required');
+    // this.fetch({
+    //   require: true
+    //   console.log("")
+    // })
+
+
+    return bcrypt.compareSync(model.get('hash'), password);
+
+    // .tap(function (user) {
+    //   console.log("######");
+    //   console.log("User test: "+ bcrypt.compareAsync(user.get('hash'), password));
+    //   return bcrypt.compareAsync(user.get('hash'), password);
+    // });
+  }
 };
 
-exports.compare = function (input, hash) {
-  return bcrypt.compareSync(input, hash);
-};
+module.exports = User;

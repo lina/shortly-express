@@ -23,9 +23,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
-
-
-
 app.use(session({
   secret: 'keyboard cat'
 }));
@@ -41,35 +38,30 @@ function(req, res) {
 });
 
 
-app.post('/signup', 
-function(req, res) {
+app.post('/signup', function (req, res) {
   var username = req.body.username,
       password = req.body.password;
-
-  console.log('Original password: ' + password + '\n');
-  var hashObj = User.hashPassword(password);
-
-  var hashKey = hashObj.hash;
-
-  console.log("the hash generated", hashKey);
 
   var user = new User({
     username: username,
     password: password
   });
-  user.save().then(function(newUser) {
+
+  user.save().then(function (newUser) {
     Users.add(newUser);
-    res.send(200, newUser);
+    req.session.user = newUser;
+    res.redirect('/');
   });
-  // console.log('Hashed to: ' + hash);
-
-  // var attempt = 'Svnh';
-
-  // console.log("Trying password " + attempt + " ... Result: " + hashify.compare(attempt, hash));
-  // console.log("Trying password " + 'incorrect' + " ... Result: " + hashify.compare('incorrect', hash));
-
-  // hash and created the user account, save it in db
 });
+
+app.post('/login', function (req, res) {
+  var username = req.body.username,
+      password = req.body.password;
+  console.log("first trigger");
+  User.userMethod.login(username, password);
+  console.log("second trigger");
+});
+
 
 app.get('/create', 
 function(req, res) {
@@ -143,6 +135,23 @@ app.get('/login', function(request, response) {
   '</p>' +
   '<p>' +
     '<input type="submit" value="Login">' +
+  '</p>' +
+  '</form>');
+});
+
+
+app.get('/signup', function(request, response) {
+   response.send('<form method="post" action="/signup">' +
+  '<p>' +
+    '<label>Username:</label>' +
+    '<input type="text" name="username">' +
+  '</p>' +
+  '<p>' +
+    '<label>Password:</label>' +
+    '<input type="text" name="password">' +
+  '</p>' +
+  '<p>' +
+    '<input type="submit" value="Signup">' +
   '</p>' +
   '</form>');
 });
