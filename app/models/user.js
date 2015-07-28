@@ -29,15 +29,14 @@ var User = db.Model.extend({
     } else {
       this.fetch().then(function (user){
         if (!user) {
-          console.log("inside !user")
           cb(false);
           throw new Error('user not found');
         } else {
           var hash = user.get('hash');
           bcrypt.compare(password, hash, function(err, res) {
             if (err) { 
-              throw err; 
               cb(false);
+              throw err; 
             } else {
               cb(res);
             }

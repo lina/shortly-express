@@ -35,14 +35,20 @@ app.use(session({
 //   resave: null
 // }));
 
+
+
 app.get('/', 
 function(req, res) {
-  if (req.session.user) {
+  util.checkUser(req, res, function() {
     res.render('index');
-  } else {
-    req.session.error = 'Access denied!';
-    res.redirect('/login');
-  }
+  });
+
+  // if (req.session.user) {
+  //   res.render('index');
+  // } else {
+  //   req.session.error = 'Access denied!';
+  //   res.redirect('/login');
+  // }
 });
 
 
@@ -62,21 +68,23 @@ app.post('/signup', function (req, res) {
   });
 });
 
+  
 app.post('/login', function (req, res) {
+  console.log("trying to login")
   var visitorName = req.body.username,
       password = req.body.password;
 
   // a visitor is attempting to login
   var visitor = new User({username: visitorName});
   visitor.login(password, function(loggedIn) {
-    console.log("first trigger");
     if(loggedIn) {
-      console.log("------------->redirecting to index");
-
-      res.redirect('/');
+      console.log("successfully logged in");
+      visitor.fetch().then(function (user){
+        req.session.user = user;
+        res.redirect('/');
+      });
     } else {
-      console.log("------------->redirecting to login");
-      // req.session.error = 'Access denied!';
+      req.session.error = 'Access denied!';
       res.redirect('/login');
     }
   }); // login
@@ -85,24 +93,32 @@ app.post('/login', function (req, res) {
 
 app.get('/create', 
 function(req, res) {
-  if (req.session.user) {
+  util.checkUser(req, res, function() {
     res.render('index');
-  } else {
-    req.session.error = 'Access denied!';
-    res.redirect('/login');
-  }
+  });
+
+  // if (req.session.user) {
+  //   res.render('index');
+  // } else {
+  //   req.session.error = 'Access denied!';
+  //   res.redirect('/login');
+  // }
 });
+
+// destroy session eventually.
+app.get('/logout', 
+  function(req, res) {
+    req.session.destroy();
+    res.redirect('/login');
+  })
 
 app.get('/links', 
   function(req, res) {
-    if (req.session.user) {
+    util.checkUser(req, res, function() {
       Links.reset().fetch().then(function(links) {
         res.send(200, links.models);
-      });
-    } else {
-      req.session.error = 'Access denied!';
-      res.redirect('/login');
-    }
+      });      
+    });
 });
 
 app.post('/links', 
@@ -143,37 +159,13 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
-app.get('/login', function(request, response) {
-   response.send('<form method="post" action="/login">' +
-  '<p>' +
-    '<label>Username:</label>' +
-    '<input type="text" name="username">' +
-  '</p>' +
-  '<p>' +
-    '<label>Password:</label>' +
-    '<input type="text" name="password">' +
-  '</p>' +
-  '<p>' +
-    '<input type="submit" value="Login">' +
-  '</p>' +
-  '</form>');
+app.get('/login', function(req, res) {
+  res.render('login');
 });
 
 
-app.get('/signup', function(request, response) {
-   response.send('<form method="post" action="/signup">' +
-  '<p>' +
-    '<label>Username:</label>' +
-    '<input type="text" name="username">' +
-  '</p>' +
-  '<p>' +
-    '<label>Password:</label>' +
-    '<input type="text" name="password">' +
-  '</p>' +
-  '<p>' +
-    '<input type="submit" value="Signup">' +
-  '</p>' +
-  '</form>');
+app.get('/signup', function(req, res) {
+  res.render('signup');
 });
 
 
