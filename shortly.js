@@ -23,9 +23,17 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
-app.use(session({
-  secret: 'keyboard cat'
+app.use(session({ 
+  secret: 'keyboard cat', 
+  cookie: { maxAge: 60000 }, 
+  resave: true, 
+  saveUninitialized: true 
 }));
+
+// app.use(session({
+//   secret: 'keyboard cat',
+//   resave: null
+// }));
 
 app.get('/', 
 function(req, res) {
@@ -58,7 +66,41 @@ app.post('/login', function (req, res) {
   var username = req.body.username,
       password = req.body.password;
   console.log("first trigger");
-  User.userMethod.login(username, password);
+
+  // console.log("shortly.js -------------->", User.login(username, password));
+  if (!username || !password) throw new Error('username and password are both required');
+  console.log("checking-------->", new User({"username": username}).fetch());
+  new User({"username": username}).fetch().then(function(model) {
+    bcrypt.compare(password, model.get('hash'), function(err, res) {
+      if(err) {
+        return;
+      } else if (res) {
+        res.redirect('/');
+      } else if (!res) {
+        // enter password again
+      } else {
+        //handle other cases
+      }
+      isAuthenticated = true;
+      return res;
+    });
+    return isAuthenticated;
+  })
+  
+  // console.log("*******shortly.js should be true", User.login(username, password));
+    // .then(function(user) {
+      // console.log("shortly.js ********************************login promise function initialised");
+
+      // res.json(user.omit('password'));
+    // }).catch(User.NotFoundError, function() {
+      // console.log("shortly.js resolved to error**********");
+      // res.json(400, {error: username + ' not found'});
+    // }).catch(function(err) {
+      // console.log("shortly.js resolved to 2nd error********");
+      // console.error(err);
+    // });
+
+  // User.login(username, password);
   console.log("second trigger");
 });
 
