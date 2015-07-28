@@ -2,7 +2,8 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
-
+var session = require('express-session');
+// var hashify = require('./bcrypt');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -23,21 +24,73 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
 
+
+
+app.use(session({
+  secret: 'keyboard cat'
+}));
+
 app.get('/', 
 function(req, res) {
-  res.render('index');
+  if (req.session.user) {
+    res.render('index');
+  } else {
+    req.session.error = 'Access denied!';
+    res.redirect('/login');
+  }
+});
+
+
+app.post('/signup', 
+function(req, res) {
+  var username = req.body.username,
+      password = req.body.password;
+
+  console.log('Original password: ' + password + '\n');
+  var hashObj = User.hashPassword(password);
+
+  var hashKey = hashObj.hash;
+
+  console.log("the hash generated", hashKey);
+
+  var user = new User({
+    username: username,
+    password: password
+  });
+  user.save().then(function(newUser) {
+    Users.add(newUser);
+    res.send(200, newUser);
+  });
+  // console.log('Hashed to: ' + hash);
+
+  // var attempt = 'Svnh';
+
+  // console.log("Trying password " + attempt + " ... Result: " + hashify.compare(attempt, hash));
+  // console.log("Trying password " + 'incorrect' + " ... Result: " + hashify.compare('incorrect', hash));
+
+  // hash and created the user account, save it in db
 });
 
 app.get('/create', 
 function(req, res) {
-  res.render('index');
+  if (req.session.user) {
+    res.render('index');
+  } else {
+    req.session.error = 'Access denied!';
+    res.redirect('/login');
+  }
 });
 
 app.get('/links', 
-function(req, res) {
-  Links.reset().fetch().then(function(links) {
-    res.send(200, links.models);
-  });
+  function(req, res) {
+    if (req.session.user) {
+      Links.reset().fetch().then(function(links) {
+        res.send(200, links.models);
+      });
+    } else {
+      req.session.error = 'Access denied!';
+      res.redirect('/login');
+    }
 });
 
 app.post('/links', 
@@ -78,6 +131,21 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+app.get('/login', function(request, response) {
+   response.send('<form method="post" action="/login">' +
+  '<p>' +
+    '<label>Username:</label>' +
+    '<input type="text" name="username">' +
+  '</p>' +
+  '<p>' +
+    '<label>Password:</label>' +
+    '<input type="text" name="password">' +
+  '</p>' +
+  '<p>' +
+    '<input type="submit" value="Login">' +
+  '</p>' +
+  '</form>');
+});
 
 
 /************************************************************/
