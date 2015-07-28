@@ -63,46 +63,24 @@ app.post('/signup', function (req, res) {
 });
 
 app.post('/login', function (req, res) {
-  var username = req.body.username,
+  var visitorName = req.body.username,
       password = req.body.password;
-  console.log("first trigger");
 
-  // console.log("shortly.js -------------->", User.login(username, password));
-  if (!username || !password) throw new Error('username and password are both required');
-  console.log("checking-------->", new User({"username": username}).fetch());
-  new User({"username": username}).fetch().then(function(model) {
-    bcrypt.compare(password, model.get('hash'), function(err, res) {
-      if(err) {
-        return;
-      } else if (res) {
-        res.redirect('/');
-      } else if (!res) {
-        // enter password again
-      } else {
-        //handle other cases
-      }
-      isAuthenticated = true;
-      return res;
-    });
-    return isAuthenticated;
-  })
-  
-  // console.log("*******shortly.js should be true", User.login(username, password));
-    // .then(function(user) {
-      // console.log("shortly.js ********************************login promise function initialised");
+  // a visitor is attempting to login
+  var visitor = new User({username: visitorName});
+  visitor.login(password, function(loggedIn) {
+    console.log("first trigger");
+    if(loggedIn) {
+      coinsole.log("------------->redirecting to index");
 
-      // res.json(user.omit('password'));
-    // }).catch(User.NotFoundError, function() {
-      // console.log("shortly.js resolved to error**********");
-      // res.json(400, {error: username + ' not found'});
-    // }).catch(function(err) {
-      // console.log("shortly.js resolved to 2nd error********");
-      // console.error(err);
-    // });
-
-  // User.login(username, password);
-  console.log("second trigger");
-});
+      res.redirect('/');
+    } else {
+      coinsole.log("------------->redirecting to login");
+      // req.session.error = 'Access denied!';
+      res.redirect('/login');
+    }
+  }); // login
+}); // post
 
 
 app.get('/create', 

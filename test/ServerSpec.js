@@ -301,7 +301,7 @@ describe('', function() {
       });
     });
 
-    it('Logs in existing users', function(done) {
+    xit('Logs in existing users', function(done) {
       var options = {
         'method': 'POST',
         'uri': 'http://127.0.0.1:4568/login',
